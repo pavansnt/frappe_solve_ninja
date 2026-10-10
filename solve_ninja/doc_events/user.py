@@ -2,7 +2,7 @@
 # For license information, please see license.txt
 
 import frappe
-from samaaja.overrides.user import username as samaaja_generate_username
+from samaaja.overrides.user import generate_unique_username
 
 ORGANISATION_MANAGER_ROLE = "Organisation Manager"
 SYSTEM_MANAGER_ROLE = "System Manager"
@@ -12,7 +12,7 @@ USER_ORGANIZATION_DOCTYPE = "User Organization"
 def after_insert(doc, method):
     create_solve_ninja(doc)
 
-def regenerate_username_on_firstname_change(doc, method):
+def regenerate_username_on_firstname_change(doc, method=None):
     """
     Regenerate username using Samaaja's username logic when first_name changes.
     This runs only for existing users; new user creation continues to use
@@ -23,17 +23,15 @@ def regenerate_username_on_firstname_change(doc, method):
         return
 
     # Optionally skip system users
-    if doc.name == "Administrator":
+    if doc.name in ("Administrator", "Guest"):
         return
 
     # Check if first_name actually changed compared to the persisted value
     existing_first_name = frappe.db.get_value("User", doc.name, "first_name")
-    if existing_first_name == doc.first_name:
+    if existing_first_name == doc.first_name and doc.username:
         return
 
-    # Clear current username so Samaaja's handler regenerates it
-    doc.username = None
-    samaaja_generate_username(doc, method)
+    doc.username = generate_unique_username(doc.first_name, doc.last_name)
 
 def after_rename(doc, method, old_name, new_name, merge=False):
     """

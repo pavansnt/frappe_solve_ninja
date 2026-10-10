@@ -353,11 +353,9 @@ def add_user():
 
 def _generate_username(first_name, last_name=None):
     """Build a unique username using Samaaja's first/last name + random suffix logic."""
-    from samaaja.overrides.user import username as samaaja_generate_username
+    from samaaja.overrides.user import generate_unique_username
 
-    stub = frappe._dict(first_name=first_name, last_name=last_name, username=None)
-    samaaja_generate_username(stub, None)
-    return stub.username
+    return generate_unique_username(first_name, last_name)
 
 
 @frappe.whitelist()
